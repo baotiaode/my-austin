@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>my-austin 管理后台</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        table { border-collapse: collapse; margin-top: 10px; }
+        td, th { border: 1px solid #ccc; padding: 6px 12px; }
+        button { margin-left: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<h1>my-austin 管理后台</h1>
+
+<h2>发送统计</h2>
+<p>总发送：<span id="total">-</span>，成功：<span id="success">-</span>，
+    失败：<span id="failed">-</span>，撤回：<span id="recalled">-</span></p>
+
+<h2>模板列表</h2>
+<table>
+    <thead>
+    <tr><th>ID</th><th>名称</th><th>渠道</th><th>状态</th><th>操作</th></tr>
+    </thead>
+    <tbody id="tpl-body"></tbody>
+</table>
+
+<h2>发送消息</h2>
+<p>
+    模板ID：<input id="tpl-id" type="number" placeholder="如 1">
+    手机号：<input id="receiver" type="text" placeholder="如 13800138000">
+    验证码：<input id="code" type="text" placeholder="{$code} 的值">
+    <button onclick="sendMsg()">发送</button>
+</p>
+
+<script>
+    const channelNames = {30: '短信', 40: '邮件', 70: '企业微信', 80: '钉钉'};
+    const statusNames = {10: '草稿', 30: '启用', 40: '停用'};
+
+    // 加载统计
+    fetch('/stats/summary')
+        .then(res => res.json())
+        .then(r => {
+            if (r.code === 200) {
+                document.getElementById('total').textContent = r.data.total;
+                document.getElementById('success').textContent = r.data.success;
+                document.getElementById('failed').textContent = r.data.failed;
+                document.getElementById('recalled').textContent = r.data.recalled;
+            }
+        });
+
+    // 加载模板列表
+    fetch('/template')
+        .then(res => res.json())
+        .then(r => {
+            const tbody = document.getElementById('tpl-body');
+            tbody.innerHTML = '';
+            r.data.forEach(t => {
+                const tr = document.createElement('tr');
+                const channel = channelNames[t.sendChannel] || t.sendChannel;
+                const status = statusNames[t.msgStatus] || t.msgStatus;
+                tr.innerHTML = '<td>' + t.id + '</td>'
+                    + '<td>' + t.name + '</td>'
+                    + '<td>' + channel + '</td>'
+                    + '<td>' + status + '</td>'
+                    + '<td><button onclick="enable(' + t.id + ')">启用</button></td>';
+                tbody.appendChild(tr);
+            });
+        });
+
+    // 启用模板
+    function enable(id) {
+        fetch('/template/' + id + '/enable', { method: 'POST' })
+            .then(res => res.json())
+            .then(r => {
+                alert(r.code === 200 ? '启用成功' : '启用失败：' + r.msg);
+                location.reload();
+            });
+    }
+
+    // 发送消息
+    function sendMsg() {
+        const tplId = document.getElementById('tpl-id').value;
+        const receiver = document.getElementById('receiver').value;
+        const code = document.getElementById('code').value;
+
+        const body = {
+            messageTemplateId: Number(tplId),
+            messageParamList: [
+                { receiver: receiver, variables: { code: code } }
+            ]
+        };
+
+        fetch('/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+            .then(res => res.json())
+            .then(r => {
+                alert(r.code === 200 ? '发送成功' : '发送失败：' + r.msg);
+            });
+    }
+</script>
+</body>
+</html>

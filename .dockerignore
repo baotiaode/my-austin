@@ -1,0 +1,9 @@
+# 编译产物：镜像里会重新编译，不需要拷进去
+target/
+
+# git 和 IDE 配置：不进镜像
+.git/
+.idea/
+*.iml
+.vscode/
+.DS_Store
