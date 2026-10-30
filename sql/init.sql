@@ -1,4 +1,9 @@
 -- my-austin 初始化脚本（简化版，只保留学习需要的字段）
+
+-- 关键：把客户端字符集设成 utf8mb4，否则下面的中文会乱码
+-- （mysql 容器执行这个文件时，默认可能用 latin1 读文件，导致中文双重编码）
+SET NAMES utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS my_austin DEFAULT CHARACTER SET utf8mb4;
 
 USE my_austin;

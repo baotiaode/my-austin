@@ -1,4 +1,6 @@
 -- 发送记录表（M6 新增）：每次发送后写入一条记录
+SET NAMES utf8mb4;
+
 USE my_austin;
 
 CREATE TABLE IF NOT EXISTS send_record (
